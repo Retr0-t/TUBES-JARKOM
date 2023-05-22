@@ -1,32 +1,70 @@
-#Baris ini mengimpor modul HTTPServer dan BaseHTTPRequestHandler dari library http.server.
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import socket
+import os
 
-#Baris ini mendefinisikan kelas Serv yang merupakan subclass dari BaseHTTPRequestHandler.
-class Serv(BaseHTTPRequestHandler):
+def change_directory():
+    os.chdir("C:\\Users\\ASUS\\Downloads\\SEMESTER 4\\JARKOM PRAK\\TUBES SERVER")
 
-#Ini adalah metode dalam kelas Serv, yang akan dipanggil ketika permintaan GET diterima.
-    def do_GET(self):
+# Mengatur alamat dan port server
+alamat_server = 'localhost'  # Alamat IP loopback untuk server lokal
+port_server = 8080  # Port yang akan digunakan oleh server
 
-#Ini adalah kondisi untuk mengubah path menjadi '/index.html' jika permintaan tidak mencantumkan path.
-        if self.path == '/':
-            self.path = '/index.html'
+# Mendapatkan direktori kerja saat ini
+current_directory = os.getcwd()
 
-# Ini mencoba membuka file yang diminta, 
-# jika berhasil maka akan mengirimkan respon dengan kode 200 OK, 
-# dan jika gagal maka akan mengirimkan respon dengan kode 404 Not Found.
-        try:
-            file_to_open = open(self.path[1:]).read()
-            self.send_response(200)
-        except:
-            file_to_open = "File not found"
-            self.send_response(404)
-    
-#Ini mengakhiri header HTTP dan menulis isi file yang diminta ke output.
-        self.end_headers()
-        self.wfile.write(bytes(file_to_open, 'utf-8'))
+# Membaca isi file "index.html"
+index_html_path = os.path.join(current_directory, 'index.html')
 
+# Membaca isi file "style.css"
+css_path = os.path.join(current_directory, 'index.css')
 
-#Ini membuat instance dari HTTPServer dan mendefinisikan port dan handler untuk permintaan HTTP, 
-# kemudian memanggil metode serve_forever() untuk menjalankan server secara terus-menerus.
-httpd = HTTPServer(('localhost', 8080), Serv)
-httpd.serve_forever()
+# Membuat objek socket TCP
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Mengaitkan socket dengan alamat dan port
+sock.bind((alamat_server, port_server))
+
+# Mendengarkan koneksi masuk
+sock.listen(1)  # Hanya satu koneksi yang dapat di-queue
+
+print("Server TCP siap untuk menerima koneksi.")
+
+while True:
+    # Menerima koneksi dari client
+    conn, addr = sock.accept()
+
+    print(f"Menerima koneksi dari: {addr[0]}:{addr[1]}")
+
+    # Menerima data dari client
+    data = conn.recv(1024).decode('latin-1')
+    print(f"Data yang diterima: {data}")
+
+    # Menyimpan data yang diterima ke file
+    with open('received_data.txt', 'w') as file:
+        file.write(data)
+
+    # Memeriksa jika permintaan adalah GET /
+    if "GET /" in data:
+        change_directory()  # Panggil fungsi untuk berpindah ke direktori yang ditentukan
+        
+        # Membaca isi file "index.html"
+        with open(index_html_path, 'r') as file:
+            content = file.read()
+
+        # Membaca isi file "style.css"
+        with open(css_path, 'r') as file:
+            css_content = file.read()
+        
+        # Menyusun respons HTTP
+        response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" + content
+
+        # Menambahkan CSS ke respons
+        response += "\r\n<style>\r\n" + css_content + "\r\n</style>\r\n"
+    else:
+        # Mengirimkan respons 404 - Page Not Found
+        response = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n404 - Page Not Found"
+
+    # Mengirimkan respons ke client
+    conn.sendall(response.encode('utf-8'))
+
+    # Menutup koneksi dengan client
+    conn.close()
