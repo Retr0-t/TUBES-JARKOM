@@ -1,36 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Contoh CSS</title>
-	<link rel="stylesheet" type="text/css" href="index.css">
+	<title>JARKOM TUBES</title>
+	<link rel="stylesheet" type="text/css" href="bootstrap-5.x.x/dist/css/bootstrap.min.css">
+	<script src="bootstrap-5.x.x/dist/js/bootstrap.bundle.min.js"></script>
+	<script>
+		function pilihFile() {
+			var input = document.createElement('input');
+			input.type = 'file';
+			input.addEventListener('change', function(e) {
+				var file = e.target.files[0];
+				console.log('File yang dipilih:', file);
+				if (file) {
+					var fileReader = new FileReader();
+					fileReader.onload = function(e) {
+						var content = e.target.result;
+						// Kirim file ke server
+						kirimFile(file, content);
+					};
+					fileReader.readAsText(file);
+				} else {
+					// Menampilkan respons 404 - File Not Found
+					var newTab = window.open();
+					newTab.document.open();
+					newTab.document.write('<html><head><title>404 Not Found</title></head><body><h1>404 - File Not Found</h1></body></html>');
+					newTab.document.close();
+				}
+			});
+			input.click();
+		}
+
+		function kirimFile(file, content) {
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', 'http://localhost:8080/save', true);
+			xhr.setRequestHeader('Content-Type', 'application/json');
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4) {
+					if (xhr.status === 200) {
+						// Menampilkan respons file berhasil disimpan
+						var newTab = window.open();
+						newTab.document.open();
+						newTab.document.write('<html><head><title>File Save failed </title></head><body><h1>File ' + file.name + ' gagal disimpan</h1></body></html>');
+						newTab.document.close();
+					} else {
+						// Menampilkan respons file gagal disimpan
+						var newTab = window.open();
+						newTab.document.open();
+						newTab.document.write('<html><head><title>File TERSIMPAN</title></head><body><h1> berhasil  menyimpan file ' + file.name + '</h1></body></html>');
+						newTab.document.close();
+					}
+				}
+			};
+			var data = JSON.stringify({
+				filename: file.name,
+				content: content
+			});
+			xhr.send(data);
+		}
+	</script>
 </head>
 <body>
-	<header>
-		<h1>Selamat Datang!</h1>
-		<nav>
-			<ul>
-				<li><a href="#">Home</a></li>
-				<li><a href="#">Tentang</a></li>
-				<li><a href="#">Kontak</a></li>
-			</ul>
-		</nav>
-	</header>
-	<main>
-		<section>
-			<h2>Tentang Kami</h2>
-			<p>Kami adalah perusahaan yang bergerak di bidang teknologi informasi.</p>
-		</section>
-		<section>
-			<h2>Layanan Kami</h2>
-			<ul>
-				<li>Pengembangan Website</li>
-				<li>Pengembangan Aplikasi Mobile</li>
-				<li>Pengembangan Sistem Informasi</li>
-			</ul>
-		</section>
-	</main>
-	<footer>
-		<p>&copy; TUBES JARKOM</p>
-	</footer>
+	<h1>TUBES JARKOM</h1>
+	<h2>CREATED BY KELOMPOK 4: Hussain, Jordy, Agung</h2>
+	<br>
+	<br>
+	<br>
+	<button onclick="pilihFile()">Pilih file</button>
+	<br>
+	<br>
+
 </body>
 </html>
