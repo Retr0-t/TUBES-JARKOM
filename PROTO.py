@@ -8,15 +8,6 @@ def change_directory():
 alamat_server = 'localhost'  # Alamat IP loopback untuk server lokal
 port_server = 8080  # Port yang akan digunakan oleh server
 
-# Mendapatkan direktori kerja saat ini
-current_directory = os.getcwd()
-
-# Membaca isi file "index.html"
-index_html_path = os.path.join(current_directory, 'index.html')
-
-# Membaca isi file "style.css"
-css_path = os.path.join(current_directory, 'index.css')
-
 # Membuat objek socket TCP
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -47,11 +38,11 @@ while True:
         change_directory()  # Panggil fungsi untuk berpindah ke direktori yang ditentukan
         
         # Membaca isi file "index.html"
-        with open(index_html_path, 'r') as file:
+        with open('index.html', 'r') as file:
             content = file.read()
 
         # Membaca isi file "style.css"
-        with open(css_path, 'r') as file:
+        with open('index.css', 'r') as file:
             css_content = file.read()
         
         # Menyusun respons HTTP
@@ -59,9 +50,14 @@ while True:
 
         # Menambahkan CSS ke respons
         response += "\r\n<style>\r\n" + css_content + "\r\n</style>\r\n"
+
     else:
         # Mengirimkan respons 404 - Page Not Found
-        response = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\n404 - Page Not Found"
+        response = "HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n"
+        response += "<html><head><title>404 Not Found</title></head><body>"
+        response += "<h1>404 Not Found</h1>"
+        response += "<p>The requested page was not found on the server.</p>"
+        response += "</body></html>"
 
     # Mengirimkan respons ke client
     conn.sendall(response.encode('utf-8'))
